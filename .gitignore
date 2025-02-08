@@ -1,0 +1,6 @@
+# Ignore Python cache & virtual environment
+__pycache__/
+*.pyc
+venv/
+food_provider.db  # Ignore SQLite database
+.env
