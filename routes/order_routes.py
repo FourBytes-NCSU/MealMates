@@ -52,6 +52,30 @@ def available_food():
     ]
     return jsonify(result)
 
+@order_bp.route('/order/available-food', methods=['PUT'])
+def available_food_put():
+    available_orders = Order.query.filter_by(status="available").all()
+    result = []
+    for order in available_orders:
+        result.append({
+            "id": order.id,
+            "provider_id": order.provider_id,
+            "provider_name": order.provider_name,
+            "food_description": order.food_description,
+            "food_quantity": order.food_quantity,
+            "expiry_date": order.expiry_date.strftime('%Y-%m-%d'),
+            "diet_type_name": order.diet_type_name,
+            "address": order.address,
+            "city": order.city,
+            "lat": order.lat,
+            "lng": order.lng,
+            "receiver_id": order.receiver_id,
+            "receiver_name": order.receiver_name,
+            "status": order.status,
+            "created_at": order.created_at.strftime('%Y-%m-%d %H:%M:%S')
+        })
+    return jsonify(result)
+
 @order_bp.route('/order/all', methods=['GET'])
 def all_orders():
     all_orders = Order.query.all()

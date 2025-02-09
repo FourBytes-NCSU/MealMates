@@ -24,13 +24,13 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
-# Register Blueprints
+
 app.register_blueprint(provider_bp)
 app.register_blueprint(receiver_bp)
 app.register_blueprint(order_bp)
 app.register_blueprint(main_bp)
 
-# Create tables before first request
+
 @app.before_first_request
 def create_tables():
     with app.app_context():
