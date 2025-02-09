@@ -12,7 +12,11 @@ from flask_cors import CORS
 
 # Initialize Flask app
 app = Flask(__name__)
-CORS(app)
+CORS(
+    app,
+    supports_credentials=True,
+    resources={r"/*": {"origins": "http://localhost:3000"}}
+)
 app.config['SECRET_KEY'] = 'supersecretkey'  # Change this in production
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///food_provider.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
