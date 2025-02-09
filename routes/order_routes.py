@@ -159,7 +159,7 @@ def confirm_order(order_id):
 @order_bp.route('/order/check-expiry', methods=['POST'])
 def check_expired_orders():
     now = datetime.now(timezone.utc)
-    expired_orders = Order.query.filter(Order.expiry_date < now, Order.status == "available").all()
+    expired_orders = Order.query.filter(Order.expiry_date < now, Order.status == "available" or Order.status == "claimed").all()
 
     for order in expired_orders:
         order.status = "expired"
@@ -170,40 +170,37 @@ def check_expired_orders():
 
 @order_bp.route('/order/daily-stats', methods=['GET'])
 def daily_stats():
-    date_str = request.args.get('date')
+    from datetime import datetime, timedelta, timezone
+    now_utc = datetime.now(timezone.utc)
+    today = now_utc.date()
+    start_date = today - timedelta(days=30)
+    result = []
 
-    if not date_str:
-        return jsonify({"error": "Date parameter is required. Format: YYYY-MM-DD"}), 400
+    for i in range(31):
+        d = start_date + timedelta(days=i)
+        start_time = datetime.combine(d, datetime.min.time(), tzinfo=timezone.utc)
+        end_time = start_time + timedelta(days=1)
 
-    try:
-        date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
-    except ValueError:
-        return jsonify({"error": "Invalid date format. Use YYYY-MM-DD."}), 400
+        saved_count = (
+            Order.query
+                 .filter(Order.status == "saved",
+                         Order.created_at >= start_time,
+                         Order.created_at < end_time)
+                 .count()
+        )
 
-    # Define the time range (from start to end of the given date)
-    start_time = datetime.combine(date_obj, datetime.min.time()).replace(tzinfo=timezone.utc)
-    end_time = start_time + timedelta(days=1)
+        wasted_count = (
+            Order.query
+                 .filter(Order.status == "expired",
+                         Order.created_at >= start_time,
+                         Order.created_at < end_time)
+                 .count()
+        )
 
-    print(f"Received query date: {date_obj}")
-    print(f"Querying stats from {start_time} to {end_time}")
+        result.append({
+            "date": str(d),
+            "meals_saved": saved_count,
+            "meals_wasted": wasted_count
+        })
 
-    # Query meals saved and wasted
-    meals_saved = Order.query.filter(
-        Order.status == "claimed",
-        Order.created_at >= start_time,
-        Order.created_at < end_time
-    ).count()
-
-    meals_wasted = Order.query.filter(
-        Order.status == "expired",
-        Order.created_at >= start_time,
-        Order.created_at < end_time
-    ).count()
-
-    print(f"Meals Saved: {meals_saved}, Meals Wasted: {meals_wasted}")
-
-    return jsonify({
-        "date": date_str,
-        "meals_saved": meals_saved,
-        "meals_wasted": meals_wasted
-    }), 200
+    return jsonify(result)
