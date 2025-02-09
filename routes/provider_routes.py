@@ -36,9 +36,8 @@ def login_provider():
     return jsonify({"error": "Invalid credentials"}), 401
 
 
-@provider_bp.route('/provider/add', methods=['POST'])
+@provider_bp.route('/provider/add', methods=['POST', 'PUT'])
 @cross_origin(origins="http://localhost:3000", supports_credentials=True)
-@login_required
 def add_food():
     data = request.get_json()
     expiry_str = data.get('expiry_date')
