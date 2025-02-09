@@ -141,7 +141,7 @@ def claim_order(order_id):
 
     order.receiver_id = current_user.id
     order.receiver_name = current_user.username
-    order.status = "CLAIMED"
+    order.status = "claimed"
 
     db.session.commit()
     return jsonify({"message": "Order claimed successfully!"}), 200
@@ -149,10 +149,10 @@ def claim_order(order_id):
 @order_bp.route('/order/confirm/<int:order_id>', methods=['POST'])
 def confirm_order(order_id):
     order = Order.query.get(order_id)
-    if not order or order.status != "CLAIMED":
+    if not order or order.status != "claimed":
         return jsonify({"error": "Order not claimed or does not exist"}), 404
 
-    order.status = "SAVED"
+    order.status = "saved"
     db.session.commit()
     return jsonify({"message": "Order confirmed as completed!"}), 200
 
@@ -170,22 +170,26 @@ def check_expired_orders():
 
 @order_bp.route('/order/daily-stats', methods=['GET'])
 def daily_stats():
-    date_str = request.args.get('date', datetime.now(timezone.utc).strftime('%Y-%m-%d'))
+    date_str = request.args.get('date')
+
+    if not date_str:
+        return jsonify({"error": "Date parameter is required. Format: YYYY-MM-DD"}), 400
+
     try:
         date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
     except ValueError:
         return jsonify({"error": "Invalid date format. Use YYYY-MM-DD."}), 400
 
-    # Ensure UTC consistency
+    # Define the time range (from start to end of the given date)
     start_time = datetime.combine(date_obj, datetime.min.time()).replace(tzinfo=timezone.utc)
     end_time = start_time + timedelta(days=1)
 
-    # Debugging print statements
-    print(f"Received date: {date_str}")
-    print(f"Querying between: {start_time} - {end_time}")
+    print(f"Received query date: {date_obj}")
+    print(f"Querying stats from {start_time} to {end_time}")
 
+    # Query meals saved and wasted
     meals_saved = Order.query.filter(
-        Order.status == "SAVED",
+        Order.status == "claimed",
         Order.created_at >= start_time,
         Order.created_at < end_time
     ).count()
@@ -202,4 +206,4 @@ def daily_stats():
         "date": date_str,
         "meals_saved": meals_saved,
         "meals_wasted": meals_wasted
-    })
+    }), 200
