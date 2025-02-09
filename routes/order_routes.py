@@ -1,5 +1,4 @@
 from datetime import datetime, timezone
-
 from flask import request, jsonify
 from flask_login import login_required, current_user
 from models.order import Order
@@ -15,11 +14,13 @@ def add_food():
         food_description=data['food_description'],
         food_quantity=data['food_quantity'],
         expiry_date=data['expiry_date'],
-        diet_type_name=data.get('diet_type_name', 'Unknown'),  # Include diet type
-        address=data.get('address', 'Unknown'),  # Include address
-        city=data.get('city', 'Unknown'),  # Include city
-        receiver_id=data.get('receiver_id'),  # Include receiver ID
-        receiver_name=data.get('receiver_name'),  # Include receiver name
+        diet_type_name=data.get('diet_type_name', 'Unknown'),
+        address=data.get('address', 'Unknown'),
+        city=data.get('city', 'Unknown'),
+        lat=data.get('lat'),  # Include latitude
+        lng=data.get('lng'),  # Include longitude
+        receiver_id=data.get('receiver_id'),
+        receiver_name=data.get('receiver_name'),
         status='available'
     )
     db.session.add(new_order)
@@ -40,6 +41,8 @@ def available_food():
             "diet_type_name": order.diet_type_name,
             "address": order.address,
             "city": order.city,
+            "lat": order.lat,
+            "lng": order.lng,
             "receiver_id": order.receiver_id,
             "receiver_name": order.receiver_name,
             "status": order.status,
@@ -63,6 +66,8 @@ def all_orders():
             "diet_type_name": order.diet_type_name,
             "address": order.address,
             "city": order.city,
+            "lat": order.lat,
+            "lng": order.lng,
             "receiver_id": order.receiver_id,
             "receiver_name": order.receiver_name,
             "status": order.status,
@@ -86,6 +91,8 @@ def wasted_food():
             "diet_type_name": order.diet_type_name,
             "address": order.address,
             "city": order.city,
+            "lat": order.lat,
+            "lng": order.lng,
             "receiver_id": order.receiver_id,
             "receiver_name": order.receiver_name,
             "status": order.status,
@@ -119,6 +126,8 @@ def update_order(order_id):
     order.diet_type_name = data.get('diet_type_name', order.diet_type_name)
     order.address = data.get('address', order.address)
     order.city = data.get('city', order.city)
+    order.lat = data.get('lat', order.lat)
+    order.lng = data.get('lng', order.lng)
     order.status = data.get('status', order.status)
 
     db.session.commit()
@@ -146,7 +155,6 @@ def confirm_order(order_id):
     order.status = "SAVED"
     db.session.commit()
     return jsonify({"message": "Order confirmed as completed!"}), 200
-
 
 @order_bp.route('/order/check-expiry', methods=['POST'])
 def check_expired_orders():

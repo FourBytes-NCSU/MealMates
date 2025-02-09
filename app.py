@@ -5,6 +5,7 @@ from models import db
 from routes.provider_routes import provider_bp
 from routes.receiver_routes import receiver_bp
 from routes.order_routes import order_bp
+from routes.main_routes import main_bp
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -24,6 +25,7 @@ login_manager.login_view = 'login'
 app.register_blueprint(provider_bp)
 app.register_blueprint(receiver_bp)
 app.register_blueprint(order_bp)
+app.register_blueprint(main_bp)
 
 # Create tables before first request
 @app.before_first_request
