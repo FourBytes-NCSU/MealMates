@@ -2,6 +2,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from models import db
+from models.provider import Provider
 from routes.provider_routes import provider_bp
 from routes.receiver_routes import receiver_bp
 from routes.order_routes import order_bp
@@ -22,13 +23,17 @@ db.init_app(app)
 # Initialize Login Manager
 login_manager = LoginManager()
 login_manager.init_app(app)
-login_manager.login_view = 'login'
+login_manager.login_view = "provider_bp.login_provider"
 
 
 app.register_blueprint(provider_bp)
 app.register_blueprint(receiver_bp)
 app.register_blueprint(order_bp)
 app.register_blueprint(main_bp)
+
+@login_manager.user_loader
+def load_user(user_id):
+    return Provider.query.get(int(user_id))
 
 
 @app.before_first_request
