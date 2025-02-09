@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from flask import request, jsonify
 from flask_login import login_required, current_user
 from models.order import Order
@@ -166,3 +166,40 @@ def check_expired_orders():
 
     db.session.commit()
     return jsonify({"message": "Expired orders updated successfully!", "expired_count": len(expired_orders)})
+
+
+@order_bp.route('/order/daily-stats', methods=['GET'])
+def daily_stats():
+    date_str = request.args.get('date', datetime.now(timezone.utc).strftime('%Y-%m-%d'))
+    try:
+        date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
+    except ValueError:
+        return jsonify({"error": "Invalid date format. Use YYYY-MM-DD."}), 400
+
+    # Ensure UTC consistency
+    start_time = datetime.combine(date_obj, datetime.min.time()).replace(tzinfo=timezone.utc)
+    end_time = start_time + timedelta(days=1)
+
+    # Debugging print statements
+    print(f"Received date: {date_str}")
+    print(f"Querying between: {start_time} - {end_time}")
+
+    meals_saved = Order.query.filter(
+        Order.status == "SAVED",
+        Order.created_at >= start_time,
+        Order.created_at < end_time
+    ).count()
+
+    meals_wasted = Order.query.filter(
+        Order.status == "expired",
+        Order.created_at >= start_time,
+        Order.created_at < end_time
+    ).count()
+
+    print(f"Meals Saved: {meals_saved}, Meals Wasted: {meals_wasted}")
+
+    return jsonify({
+        "date": date_str,
+        "meals_saved": meals_saved,
+        "meals_wasted": meals_wasted
+    })
