@@ -7,6 +7,10 @@ from routes.receiver_routes import receiver_bp
 from routes.order_routes import order_bp
 from routes.main_routes import main_bp
 from flask_cors import CORS
+from routes.auth_routes import auth_bp
+
+from models.provider import Provider
+from models.receiver import Receiver
 
 
 # Initialize Flask app
@@ -24,7 +28,12 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
+@login_manager.user_loader
+def load_user(user_id):
+    return Provider.query.get(int(user_id)) or Receiver.query.get(int(user_id))
+
 # Register Blueprints
+app.register_blueprint(auth_bp)
 app.register_blueprint(provider_bp)
 app.register_blueprint(receiver_bp)
 app.register_blueprint(order_bp)
