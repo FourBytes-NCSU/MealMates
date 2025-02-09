@@ -1,10 +1,12 @@
 from flask import request, jsonify
 from flask_login import login_user, login_required
+from flask_cors import cross_origin
 from models.receiver import Receiver
 from models import db
 from . import receiver_bp
 
 @receiver_bp.route('/receiver/register', methods=['POST'])
+@cross_origin(origins="http://localhost:3000", supports_credentials=True)
 def register_receiver():
     data = request.json
     receiver = Receiver(
@@ -18,6 +20,7 @@ def register_receiver():
     return jsonify({"message": "Receiver registered successfully!"}), 201
 
 @receiver_bp.route('/receiver/login', methods=['POST'])
+@cross_origin(origins="http://localhost:3000", supports_credentials=True)
 def login_receiver():
     data = request.json
     receiver = Receiver.query.filter_by(username=data['username'], password=data['password']).first()

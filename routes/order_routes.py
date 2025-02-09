@@ -1,11 +1,13 @@
 from datetime import datetime, timezone, timedelta
 from flask import request, jsonify
 from flask_login import login_required, current_user
+from flask_cors import cross_origin
 from models.order import Order
 from models import db
 from . import order_bp
 
 @order_bp.route('/order/add', methods=['POST'])
+@cross_origin(origins="http://localhost:3000", supports_credentials=True)
 def add_food():
     data = request.json
     new_order = Order(
@@ -28,6 +30,7 @@ def add_food():
     return jsonify({"message": "Food listing added successfully!"}), 201
 
 @order_bp.route('/order/available-food', methods=['GET'])
+@cross_origin(origins="http://localhost:3000", supports_credentials=True)
 def available_food():
     available_orders = Order.query.filter_by(status="available").all()
     result = [
@@ -53,6 +56,7 @@ def available_food():
     return jsonify(result)
 
 @order_bp.route('/order/available-food', methods=['PUT'])
+@cross_origin(origins="http://localhost:3000", supports_credentials=True)
 def available_food_put():
     available_orders = Order.query.filter_by(status="available").all()
     result = []
@@ -77,6 +81,7 @@ def available_food_put():
     return jsonify(result)
 
 @order_bp.route('/order/all', methods=['GET'])
+@cross_origin(origins="http://localhost:3000", supports_credentials=True)
 def all_orders():
     all_orders = Order.query.all()
     result = [
@@ -102,6 +107,7 @@ def all_orders():
     return jsonify(result)
 
 @order_bp.route('/order/wasted', methods=['GET'])
+@cross_origin(origins="http://localhost:3000", supports_credentials=True)
 def wasted_food():
     wasted_orders = Order.query.filter_by(status="expired").all()
     result = [
@@ -127,6 +133,7 @@ def wasted_food():
     return jsonify(result)
 
 @order_bp.route('/order/delete/<int:order_id>', methods=['DELETE'])
+@cross_origin(origins="http://localhost:3000", supports_credentials=True)
 def delete_order(order_id):
     order = Order.query.get(order_id)
     if not order:
@@ -137,6 +144,7 @@ def delete_order(order_id):
     return jsonify({"message": "Order deleted successfully!"}), 200
 
 @order_bp.route('/order/update/<int:order_id>', methods=['PUT'])
+@cross_origin(origins="http://localhost:3000", supports_credentials=True)
 def update_order(order_id):
     order = Order.query.get(order_id)
     if not order:
@@ -158,6 +166,7 @@ def update_order(order_id):
     return jsonify({"message": "Order updated successfully!"}), 200
 
 @order_bp.route('/order/claim/<int:order_id>', methods=['POST'])
+@cross_origin(origins="http://localhost:3000", supports_credentials=True)
 def claim_order(order_id):
     order = Order.query.get(order_id)
     if not order or order.status != "available":
@@ -171,6 +180,7 @@ def claim_order(order_id):
     return jsonify({"message": "Order claimed successfully!"}), 200
 
 @order_bp.route('/order/confirm/<int:order_id>', methods=['POST'])
+@cross_origin(origins="http://localhost:3000", supports_credentials=True)
 def confirm_order(order_id):
     order = Order.query.get(order_id)
     if not order or order.status != "claimed":
@@ -181,6 +191,7 @@ def confirm_order(order_id):
     return jsonify({"message": "Order confirmed as completed!"}), 200
 
 @order_bp.route('/order/check-expiry', methods=['POST'])
+@cross_origin(origins="http://localhost:3000", supports_credentials=True)
 def check_expired_orders():
     now = datetime.now(timezone.utc)
     expired_orders = Order.query.filter(Order.expiry_date < now, Order.status == "available" or Order.status == "claimed").all()
@@ -193,6 +204,7 @@ def check_expired_orders():
 
 
 @order_bp.route('/order/daily-stats', methods=['GET'])
+@cross_origin(origins="http://localhost:3000", supports_credentials=True)
 def daily_stats():
     from datetime import datetime, timedelta, timezone
     now_utc = datetime.now(timezone.utc)

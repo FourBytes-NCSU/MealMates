@@ -5,11 +5,13 @@ from flask_login import login_required, current_user, login_user
 
 from models.order import Order
 from models.provider import Provider
+from flask_cors import cross_origin
 from models import db
 from dateutil import parser
 from . import provider_bp
 
 @provider_bp.route('/provider/register', methods=['POST'])
+@cross_origin(origins="http://localhost:3000", supports_credentials=True)
 def register_provider():
     data = request.json
     provider = Provider(
@@ -24,6 +26,7 @@ def register_provider():
     return jsonify({"message": "Provider registered successfully!"}), 201
 
 @provider_bp.route('/provider/login', methods=['POST'])
+@cross_origin(origins="http://localhost:3000", supports_credentials=True)
 def login_provider():
     data = request.json
     provider = Provider.query.filter_by(username=data['username'], password=data['password']).first()
@@ -34,6 +37,7 @@ def login_provider():
 
 
 @provider_bp.route('/provider/add', methods=['POST'])
+@cross_origin(origins="http://localhost:3000", supports_credentials=True)
 @login_required
 def add_food():
     data = request.get_json()
