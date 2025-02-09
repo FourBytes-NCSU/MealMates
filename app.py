@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from models import db
 from models.provider import Provider
+from models.receiver import Receiver
 from routes.provider_routes import provider_bp
 from routes.receiver_routes import receiver_bp
 from routes.order_routes import order_bp
@@ -37,7 +38,18 @@ app.register_blueprint(main_bp)
 
 @login_manager.user_loader
 def load_user(user_id):
-    return Provider.query.get(int(user_id))
+    user = Provider.query.get(int(user_id))
+    if user:
+        print(f"🔹 Loading Provider: {user}, ID: {user.id}")
+        return user
+
+    user = Receiver.query.get(int(user_id))
+    if user:
+        print(f"🔹 Loading Receiver: {user}, ID: {user.id}")
+        return user
+
+    print(f"❌ No user found with ID: {user_id}")
+    return None
 
 
 @app.before_first_request
