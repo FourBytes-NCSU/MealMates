@@ -140,7 +140,6 @@ def generate_fake_orders():
             provider = random.choice(existing_providers)
             now_utc = datetime.now(timezone.utc)
 
-
             if expiry_date < now_utc and not receiver_id:
                 status = "expired"
             elif receiver_id:
@@ -207,7 +206,41 @@ def generate_fake_orders():
                 created_at=created_at
             ))
 
+       
+        start_dt = datetime(2025, 2, 9, tzinfo=timezone.utc)
+        end_dt = datetime(2025, 2, 16, tzinfo=timezone.utc)
+        total_seconds = int((end_dt - start_dt).total_seconds())
+
+        for i in range(30):
+            rand_sec = random.randint(0, total_seconds - 1)
+            expiry_date = start_dt + timedelta(seconds=rand_sec)
+            created_at = get_created_at_same_day(expiry_date)
+
+            provider = random.choice(existing_providers)
+            address_data = random.choice(us_addresses + raleigh_addresses)
+            food_name = random.choice(food_names)
+            diet_type = random.choice(diet_types)
+            food_quantity = random.randint(1, 10)
+
+            db.session.add(Order(
+                provider_id=provider.id,
+                receiver_id=None,
+                receiver_name="",
+                food_description=food_name,
+                food_quantity=food_quantity,
+                expiry_date=expiry_date,
+                diet_type_name=diet_type,
+                address=address_data["address"],
+                city=address_data["city"],
+                lat=address_data["lat"],
+                lng=address_data["lng"],
+                status="available",
+                provider_name=provider.name,
+                created_at=created_at
+            ))
+
         db.session.commit()
+        print("✅ 100 existing + 30 extra 'available' orders generated successfully!")
 
 def display_orders():
     with app.app_context():
