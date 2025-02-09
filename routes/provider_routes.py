@@ -39,28 +39,43 @@ def login_provider():
 @provider_bp.route('/provider/add', methods=['POST', 'PUT'])
 @cross_origin(origins="http://localhost:3000", supports_credentials=True)
 def add_food():
-    data = request.get_json()
-    expiry_str = data.get('expiry_date')
-    expiry_date = None
-    if expiry_str:
-        expiry_date = parser.parse(expiry_str)
+    hardcoded_provider = Provider.query.filter_by(username="myProvider").first()
 
-    new_order = Order(
-        provider_id=current_user.id,
-        provider_name=current_user.name,
-        food_description=data.get('food_description'),
-        food_quantity=data.get('food_quantity', 1),
-        expiry_date=expiry_date,
-        diet_type_name=data.get('diet_type_name', 'Unknown'),
-        address=current_user.address,
-        city=current_user.city,
-        lat=data.get('lat'),
-        lng=data.get('lng'),
-        status='available',
-        created_at=datetime.now(timezone.utc)
-    )
+    if not hardcoded_provider:
+        return jsonify({"error": "Hardcoded provider not found"}), 500
 
-    db.session.add(new_order)
-    db.session.commit()
+    print("🔹 Using Hardcoded Provider:", hardcoded_provider.username)
 
-    return jsonify({"message": "Order added successfully!", "order_id": new_order.id}), 201
+    try:
+        data = request.get_json(force=True)
+
+        if data is None:
+            return jsonify({"error": "Received empty JSON payload"}), 400
+
+        expiry_str = data.get('expiry_date')
+        expiry_date = parser.parse(expiry_str) if expiry_str else None
+
+        new_order = Order(
+            provider_id=hardcoded_provider.id,
+            provider_name=hardcoded_provider.name,
+            food_description=data.get('food_description'),
+            food_quantity=int(data.get('food_quantity', 1)),
+            expiry_date=expiry_date,
+            diet_type_name=data.get('diet_type_name', 'Unknown'),
+            address=hardcoded_provider.address,
+            city=hardcoded_provider.city,
+            lat=float(data.get('lat', 0)),
+            lng=float(data.get('lng', 0)),
+            status='available',
+            created_at=datetime.now(timezone.utc)
+        )
+
+        db.session.add(new_order)
+        db.session.commit()
+
+        print("✅ Order Created Successfully!")
+        return jsonify({"message": "Order added successfully!", "order_id": new_order.id}), 201
+
+    except Exception as e:
+        print("❌ Error:", str(e))
+        return jsonify({"error": "Invalid JSON request", "details": str(e)}), 400
